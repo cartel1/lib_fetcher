@@ -1,19 +1,22 @@
-from dulwich.repo import Repo
-import dulwich.porcelain as porcelain
-import tempfile
+# from dulwich.repo import Repo
+from pygit2 import clone_repository, Repository
 
 
 class GitFetch:
     """ Retrives library source code from a Git reportsitory """
 
-    def __init__(self, repo_url):
+    def __init__(self, repo_url, /, branch_name=None, lib_dir_name="."):
         self.repo_url = repo_url
+        self.branch_name = branch_name
+        self.lib_dir_name = lib_dir_name
 
-    def clone_repo(self, working_dir):
-        working_dir_path = working_dir if working_dir else "."
-        repo = porcelain.clone(self.repo_url, working_dir_path)
+    def clone_repo(self):
+        print(f'Cloning repo at url: {self.repo_url} and checking out branch {self.branch_name} ...')
+        # repo = porcelain.clone(self.repo_url, self.lib_dir_name, checkout=True)
+        repo = clone_repository(self.repo_url, self.lib_dir_name, checkout_branch=self.branch_name)
 
-        return repo
+        active_branch = self.branch_name if repo and repo.branches[self.branch_name].is_checked_out() else ""
 
-    def build_repo(selfself, repo, target_lib_output_dir):
-        pass
+        print(f'Current active branch is: {active_branch}')
+
+        return repo.workdir if repo else ""
