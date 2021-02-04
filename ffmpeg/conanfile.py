@@ -1,4 +1,5 @@
-from conans import ConanFile, AutoToolsBuildEnvironment, tools
+from conans import ConanFile, tools
+import os
 
 
 class FfmpegConan(ConanFile):
@@ -7,7 +8,6 @@ class FfmpegConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": True, "fPIC": True}
-    build_requires = "yasm/1.3.0"
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -17,20 +17,18 @@ class FfmpegConan(ConanFile):
         git = tools.Git()
         git.clone("https://github.com/FFmpeg/FFmpeg.git", "release/4.3")
 
-        # This small hack might be useful to guarantee proper /MT /MD linkage
-        # in MSVC if the packaged project doesn't have variables to set it
-        # properly
-        # tools.replace_in_file("ffmpeg/CMakeLists.txt", "PROJECT(FFmpeg)",
-        #                       '''PROJECT(FFmpeg)
-        #                         include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-        #                         conan_basic_setup()''')
-
     def build(self):
-        auto_tools = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
-
-        auto_tools.libs.append("yasm")
-        auto_tools.configure(configure_dir=f"{self.source_folder}")
-        auto_tools.make()
+        print("PATH environment variable: %s" % (tools.get_env("PATH")))
+        
+        if tools.os_info.is_windows:
+            self.run("%s %s %s %s %s" % (os.path.join(self.build_folder, 
+                "configure"), "--enable-shared", "--arch=x86_64",
+                              "--target-os=win64", "--toolchain=msvc"))
+        else:
+            self.run("%s %s %s" % (os.path.join(self.build_folder, 
+                "configure"), "--enable-shared", "--arch=x86_64"))
+            
+        self.run(["make"])
 
     def package(self):
         self.copy("*.h", dst="include", keep_path=False)
