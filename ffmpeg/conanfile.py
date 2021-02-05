@@ -28,7 +28,7 @@ class FfmpegConan(ConanFile):
             self.run("%s %s %s" % (os.path.join(self.build_folder, 
                 "configure"), "--enable-shared", "--arch=x86_64"))
             
-        self.run(["make"])
+        self.run("make")
 
     def package(self):
         self.copy("*.h", dst="include", keep_path=False)
