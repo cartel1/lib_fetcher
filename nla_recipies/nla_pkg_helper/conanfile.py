@@ -1,27 +1,30 @@
 import traceback
-
-from conans import ConanFile, tools
 import os
 import shutil
+from enum import Enum
+from conans import ConanFile, tools
 
 
 class ConanPackageHelper:
-    win10_x86_64_variation = "win10_x86_64"
-    macosx_arm64_variation = "macosx_arm64"
-    macosx_x86_64_variation = "macosx_x86_64"
-    macosx_universal_variation = "macosx_universal"
+    class ArchVariations(Enum):
+        WIN10_X86_64_VARIATION = "win10_x86_64"
+        MACOSX_ARM64_VARIATION = "macosx_arm64"
+        MACOSX_X86_64_VARIATION = "macosx_x86_64"
+        MACOSX_UNIVERSAL_VARIATION = "macosx_universal"
 
     def __init__(self, conan_file: ConanFile):
-        if not conan_file or isinstance(conan_file, ConanFile):
+        self.conan_file = conan_file
+
+    def check_conan_file(self):
+        if not self.conan_file or isinstance(self.conan_file, ConanFile):
             raise Exception("Bad paramter! Paramter must be a non null ConanFile object.")
-            self.conan_file = conan_file
 
     def build_bin_variation(self):
         print("PATH environment variable: %s" % (tools.get_env("PATH")))
         print("AS environment variable: %s" % (tools.get_env("AS")))
 
         if tools.os_info.is_windows:
-            self.conan_file.run("%s %s %s %s %s" % (os.path.join(self.build_folder,
+            self.conan_file.run("%s %s %s %s %s" % (os.path.join(self.conan_file.build_folder,
                                                                  "configure"), "--enable-shared", "--arch=x86_64",
                                                     "--target-os=win64", "--toolchain=msvc"))
         if tools.os_info.is_macos:
@@ -42,16 +45,16 @@ class ConanPackageHelper:
         bin_variation = ""
 
         if not tools.cross_building(self.conan_file, "Windows", "x86_64"):
-            bin_variation = self.win10_x86_64_variation
+            bin_variation = self.ArchVariations.WIN10_X86_64_VARIATION.value
 
         elif not tools.cross_building(self.conan_file, "Macos", "armv8"):
-            bin_variation = self.macosx_arm64_variation
+            bin_variation = self.ArchVariations.MACOSX_ARM64_VARIATION.value
 
         elif not tools.cross_building(self.conan_file, "Macos", "x86_64"):
-            bin_variation = self.macosx_x86_64_variation
+            bin_variation = self.ArchVariations.MACOSX_X86_64_VARIATION.value
 
         elif tools.cross_building(self.conan_file, "Macos", "x86_64"):
-            bin_variation = self.macosx_universal_variation
+            bin_variation = self.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value
 
         return bin_variation
 
@@ -71,37 +74,38 @@ class ConanPackageHelper:
         bin_variation = self.get_bin_variation()
 
         if bin_variation == "macosx_arm64":
-            # Look for macosx_x86_64 package bins and copy them to temp directory relative this conanfile.py file
-            # and which has the the name as that of the source package.
-            self.conan_file.copy(f"*{self.macosx_x86_64_variation}*.lib",
-                                 dst=os.path.join(self.macosx_x86_64_variation, "lib"),
+            # Look for macosx_x86_64 pkg bins and copy them to temp directory relative this conanfile.py file
+            # and which has the the name as that of the source pkg.
+            self.conan_file.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.lib",
+                                 dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
                                  rootpackage=self.conan_file.name,
                                  folder=True, keep_path=True)
 
-            self.conan_file.copy(f"*{self.macosx_x86_64_variation}*.dll",
-                                 dst=os.path.join(self.macosx_x86_64_variation, "bin"),
+            self.conan_file.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.dll",
+                                 dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "bin"),
                                  rootpackage=self.conan_file.name,
                                  folder=True, keep_path=True)
 
-            self.conan_file.copy(f"*{self.macosx_x86_64_variation}*.so",
-                                 dst=os.path.join(self.macosx_x86_64_variation, "lib"),
+            self.conan_file.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.so",
+                                 dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
                                  rootpackage=self.conan_file.name,
                                  folder=True, keep_path=True)
 
-            self.conan_file.copy(f"*{self.macosx_x86_64_variation}*.dylib",
-                                 dst=os.path.join(self.macosx_x86_64_variation, "lib"),
+            self.conan_file.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.dylib",
+                                 dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
                                  rootpackage=self.conan_file.name,
                                  folder=True, keep_path=True)
 
-            self.conan_file.copy(f"*{self.macosx_x86_64_variation}*.a",
-                                 dst=os.path.join(self.macosx_x86_64_variation, "lib"),
+            self.conan_file.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.a",
+                                 dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
                                  rootpackage=self.conan_file.name,
                                  folder=True, keep_path=True)
 
             # Iterate through each matching binary file in each macosx_arm64 and macosx_x86_64 directory and create
             # universal bin files
 
-            temp_x86_64_bin_dir = os.path.join(self.conan_file.recipe_folder, self.macosx_x86_64_variation)
+            temp_x86_64_bin_dir = os.path.join(self.conan_file.recipe_folder,
+                                               self.ArchVariations.MACOSX_X86_64_VARIATION.value)
 
             shutil.rmtree(temp_x86_64_bin_dir, ignore_errors=True)
 
@@ -118,7 +122,8 @@ class ConanPackageHelper:
                                 x86_64_file = os.path.join(temp_x86_64_bin_dir, bin_sub_dir, bin_entry.name)
 
                                 universal_file = os.path.join(self.conan_file.package_folder, bin_variation,
-                                                              self.macosx_universal_variation, bin_sub_dir,
+                                                              self.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value,
+                                                              bin_sub_dir,
                                                               bin_entry.name)
 
                                 if not os.path.exists(os.path.dirname(universal_file)):
@@ -136,3 +141,8 @@ class ConanPackageHelper:
 
                 finally:
                     shutil.rmtree(temp_x86_64_bin_dir, ignore_errors=True)
+
+
+class Pkg(ConanFile):
+    name = "nla_pkg_helper"
+    version = "1.0"
