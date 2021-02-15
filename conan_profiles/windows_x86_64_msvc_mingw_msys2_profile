@@ -5,8 +5,8 @@ cc_compiler=msvc
 CC=$cc_compiler
 PATH=[$toolchain]
 
-[build_requires]
-yasm/1.3.0
+#[build_requires]
+#yasm/1.3.0
 
 [settings]
 os=Windows

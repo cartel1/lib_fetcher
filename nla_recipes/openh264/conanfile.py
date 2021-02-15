@@ -1,12 +1,13 @@
-from conans import ConanFile, tools
+from conans import ConanFile, CMake, tools
 
 
-class FfmpegConan(ConanFile):
-    name = "ffmpeg"
-    version = "4.3"
+class Openh264Conan(ConanFile):
+    name = "openh264"
+    version = "2.1.1"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": True, "fPIC": True}
+    default_options = {"shared": False, "fPIC": True}
+    # build_requires = "nasm/2.15.05"
     python_requires = "nla_pkg_helper/1.0"
     pkg_helper = None
 
@@ -17,18 +18,15 @@ class FfmpegConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    def build_requirements(self):
-        self.build_requires("yasm/1.3.0")
-
     def source(self):
         git = tools.Git()
-        git.clone("https://github.com/FFmpeg/FFmpeg.git", "release/4.3")
+        git.clone("https://github.com/cisco/openh264.git", "openh264v2.1.1")
 
     def imports(self):
         self.pkg_helper.import_macos_x86_64_bins(self)
 
     def build(self):
-        self.pkg_helper.build_bin_variation(self, enable_shared=True)
+        self.run("make")
 
     def package(self):
         self.pkg_helper.package_all_to_bin_variation_dir(self)
