@@ -10,7 +10,6 @@ class FfmpegConan(ConanFile):
     default_options = {"shared": True, "fPIC": True}
     build_requires = "nasm/2.15.05"
     python_requires = "nla_pkg_helper/1.0"
-    build_policy = "always"
     pkg_helper = None
 
     def init(self):

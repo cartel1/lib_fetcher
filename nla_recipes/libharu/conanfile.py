@@ -8,7 +8,6 @@ class LibharuConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": True, "fPIC": True}
     python_requires = "nla_pkg_helper/1.0"
-    build_policy = "always"
     pkg_helper = None
 
     def init(self):

@@ -10,7 +10,6 @@ class LibpngConan(ConanFile):
     default_options = {"shared": True, "fPIC": True}
     python_requires = "nla_pkg_helper/1.0"
     requires = "zlib/1.2.11"
-    build_policy = "always"
     pkg_helper = None
 
     def init(self):

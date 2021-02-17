@@ -9,7 +9,6 @@ class PocoConan(ConanFile):
     default_options = {"shared": True, "fPIC": True}
     requires = "openssl/1.1.1"
     python_requires = "nla_pkg_helper/1.0"
-    build_policy = "always"
     pkg_helper = None
 
     def init(self):

@@ -9,7 +9,6 @@ class Openh264Conan(ConanFile):
     default_options = {"shared": False, "fPIC": True}
     build_requires = "nasm/2.11.06"
     python_requires = "nla_pkg_helper/1.0"
-    build_policy = "always"
     pkg_helper = None
 
     def init(self):
