@@ -1,4 +1,4 @@
-from conans import ConanFile, tools
+from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from distutils.dir_util import copy_tree
 import os
 import shutil
@@ -6,15 +6,19 @@ import shutil
 
 class NasmConan(ConanFile):
     name = "nasm"
-    version = "2.11.06"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
     python_requires = "nla_pkg_helper/1.0"
+    build_policy = "always"
     pkg_helper = None
 
     def init(self):
         self.pkg_helper = self.python_requires["nla_pkg_helper"].module.ConanPackageHelper
+
+    def set_version(self):
+        # Read the value from 'version.txt' if it is not provided in the command line
+        self.version = self.version or tools.load(os.path.join(self.recipe_folder, "version.txt"))
 
     def configure(self):
         del self.settings.compiler.libcxx
@@ -35,7 +39,8 @@ class NasmConan(ConanFile):
     def source(self):
         suffix = ".zip" if tools.os_info.is_windows else ".tar.gz"
         nasm_zip_name = "%s%s" % (self.nasm_folder_name, suffix)
-        # "https://www.nasm.us/pub/nasm/releasebuilds/2.11.06/nasm-2.11.06.tar.gz"
+
+        # "https://www.nasm.us/pub/nasm/releasebuilds/<version>/nasm-<version>.tar.gz"
         tools.download("http://www.nasm.us/"
                        "pub/nasm/releasebuilds/"
                        "%s/%s" % (self.version, nasm_zip_name), nasm_zip_name)
@@ -45,14 +50,15 @@ class NasmConan(ConanFile):
         tools.unzip(nasm_zip_name, self.source_folder)
         copy_tree(os.path.join(self.source_folder, self.nasm_folder_name), self.source_folder)
         shutil.rmtree(os.path.join(self.source_folder, self.nasm_folder_name), ignore_errors=True)
-        # os.unlink(nasm_zip_name)
-
-    def imports(self):
-        self.pkg_helper.import_macos_x86_64_bins(self)
+        os.unlink(nasm_zip_name)
 
     def build(self):
-        self.run("%s" % (os.path.join(self.build_folder, "configure")))
-        self.run("make")
+        autotools = AutoToolsBuildEnvironment(self)
 
-    def package(self):
-        self.pkg_helper.package_all_to_bin_variation_dir(self)
+        autotools.configure(configure_dir=self.build_folder)
+        autotools.install()
+
+    def package_info(self):
+        self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
+        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
+

@@ -107,27 +107,43 @@ class ConanPackageHelper:
         elif not tools.cross_building(conan_file, "Macos", "x86_64"):
             bin_variation = cls.ArchVariations.MACOSX_X86_64_VARIATION.value
 
-        elif tools.cross_building(conan_file, "Macos", "x86_64"):
-            bin_variation = cls.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value
+        # elif tools.cross_building(conan_file, "Macos", "x86_64"):
+        #     bin_variation = cls.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value
 
         return bin_variation
 
     @classmethod
-    def package_all_to_bin_variation_dir(cls, conan_file):
+    def get_bin_export_path(cls, conan_file, make_dir=False):
+        bin_dir = os.path.join(conan_file.package_folder, cls.get_bin_variation(conan_file))
+
+        if make_dir:
+            os.makedirs(bin_dir, exist_ok=True)
+
+        return bin_dir
+
+    @classmethod
+    def package_bins(cls, conan_file, extra_bins=[]):
+        cls.package_all_bins_to_bin_variation_dir(conan_file, extra_bins)
+        cls.build_universal_bins_on_macosx_arm64(conan_file)
+
+    @classmethod
+    def package_all_bins_to_bin_variation_dir(cls, conan_file, extra_bins=[]):
         bin_variation = cls.get_bin_variation(conan_file)
 
         conan_file.copy("*.h", dst=os.path.join(bin_variation, "include"), keep_path=False)
         conan_file.copy("*.lib", dst=os.path.join(bin_variation, "lib"), keep_path=False)
         conan_file.copy("*.dll", dst=os.path.join(bin_variation, "bin"), keep_path=False)
+        conan_file.copy("*.exe", dst=os.path.join(bin_variation, "bin"), keep_path=False)
         conan_file.copy("*.so", dst=os.path.join(bin_variation, "lib"), keep_path=False)
         conan_file.copy("*.dylib", dst=os.path.join(bin_variation, "lib"), keep_path=False)
         conan_file.copy("*.a", dst=os.path.join(bin_variation, "lib"), keep_path=False)
-        conan_file.copy("*.exe", dst=os.path.join(bin_variation, "bin"), keep_path=False)
 
-        cls._build_universal_bins_on_macosx_arm64(conan_file)
+        if extra_bins:
+            for file_pattern, src_dir in extra_bins:
+                conan_file.copy(file_pattern, dst=os.path.join(bin_variation, src_dir), keep_path=False)
 
     @classmethod
-    def _build_universal_bins_on_macosx_arm64(cls, conan_file):
+    def build_universal_bins_on_macosx_arm64(cls, conan_file):
         bin_variation = cls.get_bin_variation(conan_file)
 
         if bin_variation == cls.ArchVariations.MACOSX_ARM64_VARIATION.value:

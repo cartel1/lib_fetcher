@@ -22,13 +22,6 @@ class LibzmqConan(ConanFile):
     def source(self):
         git = tools.Git()
         git.clone("https://github.com/zeromq/libzmq.git", "v4.3.4")
-        # This small hack might be useful to guarantee proper /MT /MD linkage
-        # in MSVC if the packaged project doesn't have variables to set it
-        # properly
-        # tools.replace_in_file("hello/CMakeLists.txt", "PROJECT(HelloWorld)",
-        #                       '''PROJECT(HelloWorld)
-        #     include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-        #     conan_basic_setup()''')
 
     def imports(self):
         self.pkg_helper.import_macos_x86_64_bins(self)
@@ -37,8 +30,11 @@ class LibzmqConan(ConanFile):
         self.run(os.path.join(self.build_folder, "autogen.sh"))
 
         cmake = CMake(self)
-        cmake.configure(cache_build_folder="cmake-make")
+        cmake.configure(cache_build_folder="cmake-make",
+                        args=[f"-DCMAKE_INSTALL_PREFIX={self.pkg_helper.get_bin_export_path(self)}"])
         cmake.build()
+        cmake.install()
 
     def package(self):
-        self.pkg_helper.package_all_to_bin_variation_dir(self)
+        self.pkg_helper.build_universal_bins_on_macosx_arm64(self)
+

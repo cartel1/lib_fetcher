@@ -1,4 +1,4 @@
-from conans import ConanFile, tools
+from conans import ConanFile, tools, AutoToolsBuildEnvironment
 import os
 
 
@@ -9,6 +9,7 @@ class OpensslConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
     python_requires = "nla_pkg_helper/1.0"
+    build_policy = "always"
     pkg_helper = None
 
     def init(self):
@@ -30,8 +31,16 @@ class OpensslConan(ConanFile):
         self.pkg_helper.import_macos_x86_64_bins(self)
 
     def build(self):
-        self.run("%s" % (os.path.join(self.build_folder, "config")))
+        self.run("%s %s" % (os.path.join(self.build_folder, "config"), f"--prefix={self.package_folder}"))
         self.run("make")
+        self.run("make test")
+        self.run("make install")
+
+    def package_info(self):
+        self.cpp_info.includedirs = [os.path.join(self.package_folder, "include")]
+        self.cpp_info.libdirs = [os.path.join(self.package_folder, "lib")]
+        self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
+        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
 
     def package(self):
-        self.pkg_helper.package_all_to_bin_variation_dir(self)
+        self.pkg_helper.build_universal_bins_on_macosx_arm64(self)
