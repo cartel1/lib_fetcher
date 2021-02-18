@@ -9,6 +9,7 @@ class OpensslConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
     python_requires = "nla_pkg_helper/1.0"
+    python_requires_extend = "nla_pkg_helper.ConanPackageHelper"
     pkg_helper = None
 
     def init(self):

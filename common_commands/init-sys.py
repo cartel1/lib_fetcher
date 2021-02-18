@@ -5,7 +5,8 @@ import subprocess
 parser = argparse.ArgumentParser(
     description="Initializes the build system so that packages can be created from NLA conan recipes")
 
-parser.add_argument("profile_name", help="The name of the conan profile to use.")
+parser.add_argument("profile_name", help="The name of the conan profile to use.",
+                    choices=["mac_os_arm64_profile", "mac_os_x86_64_profile", "windows_x86_64_mingw_msys2_profile"])
 
 args = parser.parse_args()
 

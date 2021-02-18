@@ -7,11 +7,6 @@ class ZlibConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": True, "fPIC": True}
-    python_requires = "nla_pkg_helper/1.0"
-    pkg_helper = None
-
-    def init(self):
-        self.pkg_helper = self.python_requires["nla_pkg_helper"].module.ConanPackageHelper
 
     def set_version(self):
         # Read the value from 'version.txt' if it is not provided in the command line
