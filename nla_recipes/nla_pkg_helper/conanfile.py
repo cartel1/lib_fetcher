@@ -1,5 +1,5 @@
 import os
-import shutil
+import subprocess
 import traceback
 from enum import Enum
 
@@ -16,13 +16,14 @@ class ConanPackageHelper:
     def import_macos_x86_64_bins(self):
         # Look for macosx_x86_64 pkg bins and copy them to temp directory relative this conanfile.py file
         # and which has the the name as that of the source pkg.
-        print("Running the imports function...")
+        self.output.info("Running the imports function...")
 
         if self.get_bin_variation() == self.ArchVariations.MACOSX_ARM64_VARIATION.value:
-            print("Build is currently on a %s platform. Will import any related %s binaries if found to create "
-                  "universal "
-                  " binaries" % self.ArchVariations.MACOSX_ARM64_VARIATION.value,
-                  self.ArchVariations.MACOSX_X86_64_VARIATION.value)
+            self.output.info(
+                "Build is currently on a %s platform. Will import any related %s binaries if found to create "
+                "universal "
+                " binaries" % self.ArchVariations.MACOSX_ARM64_VARIATION.value,
+                self.ArchVariations.MACOSX_X86_64_VARIATION.value)
 
             self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.lib",
                       dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
@@ -131,16 +132,16 @@ class ConanPackageHelper:
         return bin_var_path
 
     def build_macosx_universal_bins(self):
-        bin_variation = self.get_bin_variation()
         macosx_arm64_bin_var_path = self.get_latest_bin_variation_pkg_path(
             self.ArchVariations.MACOSX_ARM64_VARIATION.value)
         macosx_x86_64_bin_var_path = self.get_latest_bin_variation_pkg_path(
             self.ArchVariations.MACOSX_X86_64_VARIATION.value)
 
         universal_file = None
+        bin_entries_count = 0
 
         if len(macosx_x86_64_bin_var_path) > 0 and len(macosx_arm64_bin_var_path) > 0:
-            print("Will attempt to generate universal binaries.")
+            self.output.info("Will attempt to generate universal binaries.")
 
             for root, dirs, files in os.walk(macosx_arm64_bin_var_path):
                 for bin_sub_dir in dirs:
@@ -163,46 +164,51 @@ class ConanPackageHelper:
                                         if not os.path.exists(os.path.dirname(universal_file)):
                                             os.makedirs(os.path.dirname(universal_file))
 
-                                        print("|| --> Generating universal binary: %s" % universal_file)
-                                        print("--> Using %s file %s" %
-                                              (self.ArchVariations.MACOSX_ARM64_VARIATION.value,
-                                               arm64_file))
-                                        print("--> Using %s file %s" % (
+                                        self.output.info("|| --> Generating universal binary: %s" % universal_file)
+                                        self.output.info("--> Using %s file %s" %
+                                                         (self.ArchVariations.MACOSX_ARM64_VARIATION.value,
+                                                          arm64_file))
+                                        self.output.info("--> Using %s file %s" % (
                                             self.ArchVariations.MACOSX_X86_64_VARIATION.value,
                                             x86_64_file))
 
                                         try:
                                             self.run("lipo -create -output %s %s %s" % (universal_file, arm64_file,
                                                                                         x86_64_file))
+                                            bin_entries_count += 1
+
                                         except Exception:
-                                            print("Error occurred while running lipo!")
+                                            self.output.info("Error occurred while running lipo!")
                                             traceback.print_exc()
                                             continue
 
-                                        print("!! --> Successfully generated universal binary: %s" % universal_file)
+                                        self.output.info(
+                                            "!! --> Successfully generated universal binary: %s" % universal_file)
                         except OSError as ose:
-                            print("Error occured while generating universal binary files: %s" % ose)
-
-                        except Exception as e:
-                            print("Error occurred while running build helper: %s" % e)
+                            self.output.info("Error occurred while generating universal binary files: %s" % ose)
                             traceback.print_exc()
 
-            print(
-                "Completed universal binaries creation. %d bin directories were created in directory %s" %
-                (len(os.listdir(os.path.dirname(universal_file))) if universal_file else 0,
-                 os.path.dirname(universal_file)))
+                        except Exception as e:
+                            self.output.info("Error occurred while running build helper: %s" % e)
+                            traceback.print_exc()
 
+            self.output.info(
+                "Completed universal binaries creation. %d bin entries were created in directory %s" %
+                (bin_entries_count, os.path.join(macosx_arm64_bin_var_path,
+                                                 self.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value)))
 
-def clean_conan_cache_by_os_host_and_arch(self, pkg_name, pkg_version, host_os, host_arch, remote=None):
-    local_clean_cache_cmd = ["conan", "remove", "-b", "-s", "-f", "-l", "-t", "-q",
-                             f"os={host_os}", "AND", f"arch={host_arch}", f"{pkg_name}/{pkg_version}@"]
+    def clean_conan_cache_by_detected_os_host_and_arch(self, pkg_name, pkg_version, remote=None):
+        local_clean_cache_cmd = ["conan", "remove", f"{pkg_name}/{pkg_version}@", "-s", "-f", "-t", "-q",
+                                 f"os={tools.detected_os()} AND arch={tools.detected_architecture()}"]
+        self.output.info("Clearing package cache...")
+        subprocess.run([cmd_opt for cmd_opt in local_clean_cache_cmd], text=True, stderr=subprocess.STDOUT)
 
-    self.run([cmd_opt for cmd_opt in local_clean_cache_cmd])
+        if remote:
+            remote_clean_cache_cmd = local_clean_cache_cmd + ["-r", remote]
 
-    if remote:
-        remote_clean_cache_cmd = local_clean_cache_cmd + ["-r", remote]
+            subprocess.run([cmd_opt for cmd_opt in remote_clean_cache_cmd], text=True, stderr=subprocess.STDOUT)
 
-        self.run([cmd_opt for cmd_opt in remote_clean_cache_cmd])
+        self.output.info("Package cache cleared...")
 
 
 class Pkg(ConanFile):

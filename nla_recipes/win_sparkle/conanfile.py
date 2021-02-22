@@ -15,6 +15,8 @@ class WinSparkleConan(ConanFile):
     def init(self):
         self.pkg_helper = self.python_requires["nla_pkg_helper"].module.ConanPackageHelper
 
+        self.pkg_helper.clean_conan_cache_by_detected_os_host_and_arch(self, self.name, self.version)
+
     def configure(self):
         if self.settings.os != "Windows":
             raise ConanInvalidConfiguration("This library is only needed for Windows")

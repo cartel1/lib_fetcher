@@ -1,5 +1,4 @@
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
-import os
 
 
 class FfmpegConan(ConanFile):
@@ -15,6 +14,8 @@ class FfmpegConan(ConanFile):
 
     def init(self):
         self.pkg_helper = self.python_requires["nla_pkg_helper"].module.ConanPackageHelper
+
+        self.pkg_helper.clean_conan_cache_by_detected_os_host_and_arch(self, self.name, self.version)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -35,7 +36,10 @@ class FfmpegConan(ConanFile):
 
         autotools.libs.append("nasm")
 
-        cmd_args = [f"--prefix={self.pkg_helper.get_bin_export_path(self)}", "--enable-shared"]
+        cmd_args = [f"--prefix={self.pkg_helper.get_bin_export_path(self)}", "--enable-shared",
+                    "--enable-gpl", "--disable-outdev=sdl",
+                    "--enable-runtime-cpudetect", "--disable-bzlib",
+                    "--disable-libfreetype", "--disable-libopenjpeg", "--enable-zlib"]
 
         if tools.os_info.is_windows:
             cmd_args = cmd_args + ["--arch=x86_64", "--target-os=win64", "--toolchain=msvc"]
@@ -49,4 +53,3 @@ class FfmpegConan(ConanFile):
 
         autotools.configure(args=[cmd_option for cmd_option in cmd_args])
         autotools.install()
-
