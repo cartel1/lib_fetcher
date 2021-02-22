@@ -1,7 +1,8 @@
-import traceback
 import os
 import shutil
+import traceback
 from enum import Enum
+
 from conans import ConanFile, tools
 
 
@@ -86,7 +87,7 @@ class ConanPackageHelper:
 
     def package_bins(self, extra_bins=None):
         self.package_all_bins_to_bin_variation_dir(extra_bins)
-        self.build_universal_bins_on_macosx_arm64()
+        self.build_macosx_universal_bins()
 
     def package_all_bins_to_bin_variation_dir(self, extra_bins=None):
         bin_variation = self.get_bin_variation()
@@ -103,64 +104,105 @@ class ConanPackageHelper:
             for file_pattern, src_dir in extra_bins:
                 self.copy(file_pattern, dst=os.path.join(bin_variation, src_dir), keep_path=False)
 
-    def build_universal_bins_on_macosx_arm64(self):
+    def _bin_key_func(self, bin_path_mod_time_tup):
+        mod_time_key = None
+
+        if bin_path_mod_time_tup:
+            mod_time_key = bin_path_mod_time_tup[1]
+
+        return mod_time_key
+
+    def get_latest_bin_variation_pkg_path(self, bin_variation):
+        bin_var_path = ""
+        pkg_paths = []
+
+        if bin_variation:
+            for root, dirs, files in os.walk(os.path.dirname(self.package_folder)):
+                for bin_dir in dirs:
+                    if bin_dir == bin_variation:
+                        bin_var_path = os.path.join(root, bin_dir)
+                        pkg_paths.append((bin_var_path, os.path.getmtime(bin_var_path)))
+                        break
+
+            if pkg_paths:
+                pkg_paths.sort(key=self._bin_key_func, reverse=True)
+                bin_var_path = pkg_paths[0][0]
+
+        return bin_var_path
+
+    def build_macosx_universal_bins(self):
         bin_variation = self.get_bin_variation()
+        macosx_arm64_bin_var_path = self.get_latest_bin_variation_pkg_path(
+            self.ArchVariations.MACOSX_ARM64_VARIATION.value)
+        macosx_x86_64_bin_var_path = self.get_latest_bin_variation_pkg_path(
+            self.ArchVariations.MACOSX_X86_64_VARIATION.value)
 
-        if bin_variation == self.ArchVariations.MACOSX_ARM64_VARIATION.value:
-            # Iterate through each matching binary file in each macosx_arm64 and macosx_x86_64 directory and create
-            # universal bin files
+        universal_file = None
 
+        if len(macosx_x86_64_bin_var_path) > 0 and len(macosx_arm64_bin_var_path) > 0:
             print("Will attempt to generate universal binaries.")
 
-            temp_x86_64_bin_dir = os.path.join(self.recipe_folder,
-                                               self.ArchVariations.MACOSX_X86_64_VARIATION.value)
+            for root, dirs, files in os.walk(macosx_arm64_bin_var_path):
+                for bin_sub_dir in dirs:
+                    if bin_sub_dir in ["lib", "bin"]:
+                        try:
+                            with os.scandir(os.path.join(root, bin_sub_dir)) as bin_entry_iter:
+                                for bin_entry in bin_entry_iter:
+                                    if bin_entry.is_file():
+                                        x86_64_file = os.path.join(macosx_x86_64_bin_var_path, bin_sub_dir,
+                                                                   bin_entry.name)
 
-            shutil.rmtree(temp_x86_64_bin_dir, ignore_errors=True)
+                                        arm64_file = os.path.join(macosx_arm64_bin_var_path, bin_sub_dir,
+                                                                  bin_entry.name)
 
-            for bin_sub_dir in ["lib", "bin"]:
-                try:
-                    with os.scandir(os.path.join(temp_x86_64_bin_dir, bin_sub_dir)) as bin_entry_iter:
-                        for bin_entry in bin_entry_iter:
-                            if os.path.exists(os.path.join(self.package_folder, bin_variation, bin_sub_dir,
-                                                           bin_entry.name)):
+                                        universal_file = os.path.join(macosx_arm64_bin_var_path,
+                                                                      self.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value,
+                                                                      bin_sub_dir,
+                                                                      bin_entry.name)
 
-                                arm64_file = os.path.join(self.package_folder, bin_variation, bin_sub_dir,
-                                                          bin_entry.name)
+                                        if not os.path.exists(os.path.dirname(universal_file)):
+                                            os.makedirs(os.path.dirname(universal_file))
 
-                                x86_64_file = os.path.join(temp_x86_64_bin_dir, bin_sub_dir, bin_entry.name)
+                                        print("|| --> Generating universal binary: %s" % universal_file)
+                                        print("--> Using %s file %s" %
+                                              (self.ArchVariations.MACOSX_ARM64_VARIATION.value,
+                                               arm64_file))
+                                        print("--> Using %s file %s" % (
+                                            self.ArchVariations.MACOSX_X86_64_VARIATION.value,
+                                            x86_64_file))
 
-                                universal_file = os.path.join(self.package_folder, bin_variation,
-                                                              self.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value,
-                                                              bin_sub_dir,
-                                                              bin_entry.name)
+                                        try:
+                                            self.run("lipo -create -output %s %s %s" % (universal_file, arm64_file,
+                                                                                        x86_64_file))
+                                        except Exception:
+                                            print("Error occurred while running lipo!")
+                                            traceback.print_exc()
+                                            continue
 
-                                if not os.path.exists(os.path.dirname(universal_file)):
-                                    os.makedirs(os.path.dirname(universal_file))
+                                        print("!! --> Successfully generated universal binary: %s" % universal_file)
+                        except OSError as ose:
+                            print("Error occured while generating universal binary files: %s" % ose)
 
-                                print("|| --> Generating universal binary: %s", universal_file)
-                                print("--> Using %s file %s", self.ArchVariations.MACOSX_ARM64_VARIATION.value,
-                                      arm64_file)
-                                print("--> Using %s file %s", self.ArchVariations.MACOSX_X86_64_VARIATION.value,
-                                      x86_64_file)
+                        except Exception as e:
+                            print("Error occurred while running build helper: %s" % e)
+                            traceback.print_exc()
 
-                                self.run("lipo -create -output %s %s $s", universal_file, arm64_file,
-                                         x86_64_file)
+            print(
+                "Completed universal binaries creation. %d bin directories were created in directory %s" %
+                (len(os.listdir(os.path.dirname(universal_file))) if universal_file else 0,
+                 os.path.dirname(universal_file)))
 
-                                print("!! --> Successfully generated universal binary: %s", universal_file)
-                except OSError as ose:
-                    print("Error occured while generating universal binary files: %s", ose)
-                    traceback.print_exc()
 
-                except Exception as e:
-                    print("Error occurred while running build helper: %s", e)
-                    traceback.print_exc()
+def clean_conan_cache_by_os_host_and_arch(self, pkg_name, pkg_version, host_os, host_arch, remote=None):
+    local_clean_cache_cmd = ["conan", "remove", "-b", "-s", "-f", "-l", "-t", "-q",
+                             f"os={host_os}", "AND", f"arch={host_arch}", f"{pkg_name}/{pkg_version}@"]
 
-                finally:
-                    uni_bins_export_folder = os.path.join(self.package_folder, bin_variation)
+    self.run([cmd_opt for cmd_opt in local_clean_cache_cmd])
 
-                    print("Completed universal binaries creation. %d entries were created in directory %s",
-                          len(os.listdir(uni_bins_export_folder)), uni_bins_export_folder)
-                    shutil.rmtree(temp_x86_64_bin_dir, ignore_errors=True)
+    if remote:
+        remote_clean_cache_cmd = local_clean_cache_cmd + ["-r", remote]
+
+        self.run([cmd_opt for cmd_opt in remote_clean_cache_cmd])
 
 
 class Pkg(ConanFile):

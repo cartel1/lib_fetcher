@@ -36,5 +36,5 @@ class LibzmqConan(ConanFile):
         cmake.install()
 
     def package(self):
-        self.pkg_helper.build_universal_bins_on_macosx_arm64(self)
+        self.pkg_helper.build_macosx_universal_bins(self)
 

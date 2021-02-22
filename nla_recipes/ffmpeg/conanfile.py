@@ -24,14 +24,11 @@ class FfmpegConan(ConanFile):
         git = tools.Git()
         git.clone("https://github.com/FFmpeg/FFmpeg.git", "release/4.3")
 
-    def imports(self):
-        self.pkg_helper.import_macos_x86_64_bins(self)
-
     def build(self):
         self._build_bin_variation()
 
     def package(self):
-        self.pkg_helper.build_universal_bins_on_macosx_arm64(self)
+        self.pkg_helper.build_macosx_universal_bins(self)
 
     def _build_bin_variation(self):
         autotools = AutoToolsBuildEnvironment(self)
