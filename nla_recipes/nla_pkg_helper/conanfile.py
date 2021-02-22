@@ -14,8 +14,6 @@ class ConanPackageHelper:
         MACOSX_UNIVERSAL_VARIATION = "macosx_universal"
 
     def import_macos_x86_64_bins(self):
-        # Look for macosx_x86_64 pkg bins and copy them to temp directory relative this conanfile.py file
-        # and which has the the name as that of the source pkg.
         self.output.info("Running the imports function...")
 
         if self.get_bin_variation() == self.ArchVariations.MACOSX_ARM64_VARIATION.value:
@@ -72,9 +70,6 @@ class ConanPackageHelper:
 
         elif not tools.cross_building(self, "Macos", "x86_64"):
             bin_variation = self.ArchVariations.MACOSX_X86_64_VARIATION.value
-
-        # elif tools.cross_building(conan_file, "Macos", "x86_64"):
-        #     bin_variation = self.ArchVariations.MACOSX_UNIVERSAL_VARIATION.value
 
         return bin_variation
 
