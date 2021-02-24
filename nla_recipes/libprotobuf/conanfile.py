@@ -27,9 +27,6 @@ class ProtobufConan(ConanFile):
         git.clone("https://github.com/protocolbuffers/protobuf.git")
         git.checkout("v3.14.0", submodule="recursive")
 
-    def imports(self):
-        self.pkg_helper.import_macos_x86_64_bins(self)
-
     def build(self):
         self.run(os.path.join(self.build_folder, "autogen.sh"))
 

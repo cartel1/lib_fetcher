@@ -1,9 +1,9 @@
 import os
 import subprocess
-import traceback
-from enum import Enum
 
+import traceback
 from conans import ConanFile, tools
+from enum import Enum
 
 
 class ConanPackageHelper:
@@ -12,46 +12,6 @@ class ConanPackageHelper:
         MACOSX_ARM64_VARIATION = "macosx_arm64"
         MACOSX_X86_64_VARIATION = "macosx_x86_64"
         MACOSX_UNIVERSAL_VARIATION = "macosx_universal"
-
-    def import_macos_x86_64_bins(self):
-        self.output.info("Running the imports function...")
-
-        if self.get_bin_variation() == self.ArchVariations.MACOSX_ARM64_VARIATION.value:
-            self.output.info(
-                "Build is currently on a %s platform. Will import any related %s binaries if found to create "
-                "universal "
-                " binaries" % self.ArchVariations.MACOSX_ARM64_VARIATION.value,
-                self.ArchVariations.MACOSX_X86_64_VARIATION.value)
-
-            self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.lib",
-                      dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
-                      root_package=self.name,
-                      folder=True, keep_path=True)
-
-            self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.dll",
-                      dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "bin"),
-                      root_package=self.name,
-                      folder=True, keep_path=True)
-
-            self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.so",
-                      dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
-                      root_package=self.name,
-                      folder=True, keep_path=True)
-
-            self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.dylib",
-                      dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
-                      root_package=self.name,
-                      folder=True, keep_path=True)
-
-            self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.a",
-                      dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "lib"),
-                      root_package=self.name,
-                      folder=True, keep_path=True)
-
-            self.copy(f"*{self.ArchVariations.MACOSX_X86_64_VARIATION.value}*.exe",
-                      dst=os.path.join(self.ArchVariations.MACOSX_X86_64_VARIATION.value, "bin"),
-                      root_package=self.name,
-                      folder=True, keep_path=True)
 
     @staticmethod
     def check_conan_file(conan_file):
@@ -85,16 +45,17 @@ class ConanPackageHelper:
         self.package_all_bins_to_bin_variation_dir(extra_bins)
         self.build_macosx_universal_bins()
 
-    def package_all_bins_to_bin_variation_dir(self, extra_bins=None):
+    def package_all_bins_to_bin_variation_dir(self, extra_bins=None, bin_src=None):
         bin_variation = self.get_bin_variation()
+        src_bins = bin_src if bin_src else ""
 
-        self.copy("*.h", dst=os.path.join(bin_variation, "include"), keep_path=False)
-        self.copy("*.lib", dst=os.path.join(bin_variation, "lib"), keep_path=False)
-        self.copy("*.dll", dst=os.path.join(bin_variation, "bin"), keep_path=False)
-        self.copy("*.exe", dst=os.path.join(bin_variation, "bin"), keep_path=False)
-        self.copy("*.so", dst=os.path.join(bin_variation, "lib"), keep_path=False)
-        self.copy("*.dylib", dst=os.path.join(bin_variation, "lib"), keep_path=False)
-        self.copy("*.a", dst=os.path.join(bin_variation, "lib"), keep_path=False)
+        self.copy("*.h", dst=os.path.join(bin_variation, "include"), src=src_bins, keep_path=False)
+        self.copy("*.lib", dst=os.path.join(bin_variation, "lib"), src=src_bins, keep_path=False)
+        self.copy("*.dll", dst=os.path.join(bin_variation, "bin"), src=src_bins, keep_path=False)
+        self.copy("*.exe", dst=os.path.join(bin_variation, "bin"), src=src_bins, keep_path=False)
+        self.copy("*.so", dst=os.path.join(bin_variation, "lib"), src=src_bins, keep_path=False)
+        self.copy("*.dylib", dst=os.path.join(bin_variation, "lib"), src=src_bins, keep_path=False)
+        self.copy("*.a", dst=os.path.join(bin_variation, "lib"), src=src_bins, keep_path=False)
 
         if extra_bins:
             for file_pattern, src_dir in extra_bins:

@@ -21,9 +21,6 @@ class Openh264Conan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    def imports(self):
-        self.pkg_helper.import_macos_x86_64_bins(self)
-
     def source(self):
         git = tools.Git()
         git.clone("https://github.com/cisco/openh264.git", "openh264v2.1.1")

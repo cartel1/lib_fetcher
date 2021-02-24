@@ -25,9 +25,6 @@ class LibzmqConan(ConanFile):
         git = tools.Git()
         git.clone("https://github.com/zeromq/libzmq.git", "v4.3.4")
 
-    def imports(self):
-        self.pkg_helper.import_macos_x86_64_bins(self)
-
     def build(self):
         self.run(os.path.join(self.build_folder, "autogen.sh"))
 

@@ -26,9 +26,6 @@ class LibpngConan(ConanFile):
         git = tools.Git()
         git.clone("https://github.com/glennrp/libpng.git", "v1.6.37")
 
-    def imports(self):
-        self.pkg_helper.import_macos_x86_64_bins(self)
-
     def build(self):
         cmake = CMake(self)
         cmake.configure(args=[f"-DCMAKE_INSTALL_PREFIX={self.pkg_helper.get_bin_export_path(self)}"])
