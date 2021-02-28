@@ -42,9 +42,14 @@ class NasmConan(ConanFile):
                          "http://www.nasm.us/pub/nasm/releasebuilds"
                          "/%s/%s" % (self.version, nasm_zip_name))
         tools.unzip(nasm_zip_name, self.source_folder)
-        copy_tree(os.path.join(self.source_folder, self.nasm_folder_name), self.source_folder)
-        shutil.rmtree(os.path.join(self.source_folder, self.nasm_folder_name), ignore_errors=True)
-        os.unlink(nasm_zip_name)
+
+        # Get rid of dots in folder name if any to make windows happy when copying directories
+        temp_nasm_folder_name = self.nasm_folder_name.replace(".", "-")
+        tools.rename(os.path.join(self.source_folder, self.nasm_folder_name),
+                     os.path.join(self.source_folder, temp_nasm_folder_name))
+        copy_tree(os.path.join(self.source_folder, temp_nasm_folder_name), self.source_folder)
+        shutil.rmtree(os.path.join(self.source_folder, temp_nasm_folder_name), ignore_errors=True)
+        os.remove(nasm_zip_name)
 
     def build(self):
         autotools = AutoToolsBuildEnvironment(self)
@@ -55,4 +60,3 @@ class NasmConan(ConanFile):
     def package_info(self):
         self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
         self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
-
