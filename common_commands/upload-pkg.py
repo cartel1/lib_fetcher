@@ -19,5 +19,5 @@ nla_recipes_dir = os.path.join(base_dir, "nla_recipes")
 
 excluded_package_recipes = ["nla_pkg_helper"]
 
-exec_common_cmd(["conan", "upload"], "Upload", "uploads", args.package, nla_recipes_dir,
+exec_common_cmd(["conan", "upload", "--all", "-c"], "Upload", "uploads", args.package, nla_recipes_dir,
                 excluded_package_recipes, remote=args.remote, pkg_version=args.version)
