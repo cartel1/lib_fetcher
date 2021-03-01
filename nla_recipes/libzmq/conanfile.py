@@ -1,5 +1,4 @@
-from conans import ConanFile, tools, AutoToolsBuildEnvironment, CMake
-import os
+from conans import ConanFile, tools, CMake
 
 
 class LibzmqConan(ConanFile):
@@ -26,8 +25,6 @@ class LibzmqConan(ConanFile):
         git.clone("https://github.com/zeromq/libzmq.git", "v4.3.4")
 
     def build(self):
-        self.run(os.path.join(self.build_folder, "autogen.sh"))
-
         cmake = CMake(self)
         cmake.configure(cache_build_folder="cmake-make",
                         args=[f"-DCMAKE_INSTALL_PREFIX={self.pkg_helper.get_bin_export_path(self)}"])
@@ -36,4 +33,3 @@ class LibzmqConan(ConanFile):
 
     def package(self):
         self.pkg_helper.build_macosx_universal_bins(self)
-
