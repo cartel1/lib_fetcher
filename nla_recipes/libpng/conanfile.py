@@ -1,5 +1,6 @@
-from conans import ConanFile, CMake, tools
 import os
+
+from conans import ConanFile, CMake, tools
 
 
 class LibpngConan(ConanFile):
@@ -27,10 +28,9 @@ class LibpngConan(ConanFile):
         git.clone("https://github.com/glennrp/libpng.git", "v1.6.37")
 
     def build(self):
-        cmake = CMake(self)
-        cmake.configure(args=[f"-DCMAKE_INSTALL_PREFIX={self.pkg_helper.get_bin_export_path(self)}"])
-        cmake.build()
-        cmake.install()
+        self.run(
+            [os.path.join(self.build_folder, "configure"), f"--prefix={self.pkg_helper.get_bin_export_path(self)}"])
+        self.run(["make", "install"])
 
     def package(self):
         self.pkg_helper.build_macosx_universal_bins(self)
