@@ -1,4 +1,8 @@
-from conans import ConanFile, tools, CMake
+import os
+import shutil
+from distutils.dir_util import copy_tree
+
+from conans import ConanFile, tools
 
 
 class LibzmqConan(ConanFile):
@@ -20,16 +24,33 @@ class LibzmqConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
+    @property
+    def zmq_folder_name(self):
+        return "zeromq-%s" % self.version
+
     def source(self):
-        git = tools.Git()
-        git.clone("https://github.com/zeromq/libzmq.git", "v4.3.4")
+        suffix = ".zip" if tools.os_info.is_windows else ".tar.gz"
+        zmq_zip_name = "%s%s" % (self.zmq_folder_name, suffix)
+
+        suffix = ".zip"
+        zmq_zip_name = "%s%s" % (self.zmq_folder_name, suffix)
+        zmq_url = "https://github.com/zeromq/libzmq/releases/download/v4.3.4/%s" % zmq_zip_name
+
+        self.output.info("Downloading zmq: %s" % zmq_url)
+
+        tools.download(zmq_url, zmq_zip_name)
+        tools.unzip(zmq_zip_name, self.source_folder, keep_permissions=True)
+
+        if not tools.os_info.is_windows:
+            copy_tree(os.path.join(self.source_folder, self.zmq_folder_name), self.source_folder)
+            shutil.rmtree(os.path.join(self.source_folder, self.zmq_folder_name), ignore_errors=True)
+
+        os.remove(zmq_zip_name)
 
     def build(self):
-        cmake = CMake(self)
-        cmake.configure(cache_build_folder="cmake-make",
-                        args=[f"-DCMAKE_INSTALL_PREFIX={self.pkg_helper.get_bin_export_path(self)}"])
-        cmake.build()
-        cmake.install()
+        self.run(
+            [os.path.join(self.build_folder, "configure"), f"--prefix={self.pkg_helper.get_bin_export_path(self)}"])
+        self.run(["make", "install"])
 
     def package(self):
         self.pkg_helper.build_macosx_universal_bins(self)
