@@ -35,6 +35,7 @@ class CrashpadConan(ConanFile):
                         self.pkg_helper.ArchVariations.MACOSX_X86_64_VARIATION.value: "x64"}
 
             self.run(f"gn gen {output_dir}")
+            self.run(f"ninja -C {output_dir}")
             tools.save(os.path.join(self.build_folder, self.name, output_dir, "args.gn"),
                        'target_cpu=\"%s\"' % arch_map[self.pkg_helper.get_bin_variation(self)], append=True)
             self.run(f"ninja -C {output_dir}")
