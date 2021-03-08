@@ -32,6 +32,8 @@ class CrashpadConan(ConanFile):
             output_dir = os.path.join(self.out_dir, self.release_dir)
 
             self.run(f"gn gen {output_dir}")
+            tools.save(os.path.join(self.build_folder, self.name, output_dir, "args.gn"),
+                       'target_cpu=\"%s\"' % "host_cpu", append=True)
             self.run(f"ninja -C {output_dir}")
 
     def package(self):
