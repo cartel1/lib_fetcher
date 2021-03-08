@@ -31,7 +31,7 @@ class ProtobufConan(ConanFile):
         self.run(os.path.join(self.build_folder, "autogen.sh"))
 
         autotools = AutoToolsBuildEnvironment(self)
-        autotools.configure(args=[f"--prefix={self.pkg_helper.get_bin_export_path(self)}"])
+        autotools.configure(args=[f"--prefix={self.pkg_helper.get_bin_export_path(self)}", "--disable-shared"])
         autotools.install()
 
     def package(self):
