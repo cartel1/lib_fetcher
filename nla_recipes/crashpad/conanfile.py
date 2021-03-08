@@ -30,10 +30,13 @@ class CrashpadConan(ConanFile):
     def build(self):
         with tools.chdir(self.name):
             output_dir = os.path.join(self.out_dir, self.release_dir)
+            arch_map = {self.pkg_helper.ArchVariations.WIN10_X86_64_VARIATION.value: "x64",
+                        self.pkg_helper.ArchVariations.MACOSX_ARM64_VARIATION.value: "arm64",
+                        self.pkg_helper.ArchVariations.MACOSX_X86_64_VARIATION.value: "x64"}
 
             self.run(f"gn gen {output_dir}")
             tools.save(os.path.join(self.build_folder, self.name, output_dir, "args.gn"),
-                       'target_cpu=\"%s\"' % "host_cpu", append=True)
+                       'target_cpu=\"%s\"' % arch_map[self.pkg_helper.get_bin_variation(self)], append=True)
             self.run(f"ninja -C {output_dir}")
 
     def package(self):
