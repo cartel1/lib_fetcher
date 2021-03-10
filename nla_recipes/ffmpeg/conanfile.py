@@ -7,6 +7,7 @@ class FfmpegConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": True, "fPIC": True}
+    requires = "zlib/1.2.11"
     build_requires = "nasm/2.15.05"
     python_requires = "nla_pkg_helper/1.0"
     python_requires_extend = "nla_pkg_helper.ConanPackageHelper"

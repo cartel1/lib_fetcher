@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from nla_utils.CommandUtil import exec_common_cmd
+from cmd_utils.CommandUtil import exec_common_cmd
 
 parser = argparse.ArgumentParser(
     description="Download packages from a specified remote Conan Package Manager Repository.")

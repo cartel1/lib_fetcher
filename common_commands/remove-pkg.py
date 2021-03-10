@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from nla_utils.CommandUtil import exec_common_cmd
+from cmd_utils.CommandUtil import exec_common_cmd
 
 parser = argparse.ArgumentParser(
     description="Delete packages from the local Conan package cache.")

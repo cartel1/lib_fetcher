@@ -166,6 +166,13 @@ class ConanPackageHelper:
 
         self.output.info("Package cache cleared...")
 
+    def append_shared_build_option(self, command_args_list):
+        if command_args_list:
+            if self.options.shared:
+                command_args_list.append("--enable-shared=yes")
+            else:
+                command_args_list.append("--enable-shared=no")
+
 
 class Pkg(ConanFile):
     name = "nla_pkg_helper"

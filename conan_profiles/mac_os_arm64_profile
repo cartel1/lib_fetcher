@@ -7,6 +7,7 @@ AS=gas-preprocessor.pl
 [settings]
 os_build=Macos
 os=Macos
+os.version=10.12
 os.sdk=macosx
 arch=armv8
 compiler=apple-clang

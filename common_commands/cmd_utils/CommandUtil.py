@@ -22,7 +22,7 @@ def _print_pkg_processing_report(package_list, processing_ok, process_label_suff
 
 def exec_common_cmd(cmd_opts_list, cmd_title_label, cmd_suffix_label, pkg_name, nla_recipes_dir,
                     excluded_recipes_list, remote=None, pkg_version=None, profile_name=None,
-                    recipe_profile_exclusion_list=None, profiles_dir_path=None, use_recipe_path=False):
+                    recipe_profile_exclusion_list=None, profiles_dir_path=None, use_recipe_path=False, shared=None):
     print(f"{cmd_title_label} package: {pkg_name}")
 
     successful_ops = []
@@ -42,6 +42,9 @@ def exec_common_cmd(cmd_opts_list, cmd_title_label, cmd_suffix_label, pkg_name, 
             cmd_opts = [cmd_opt for cmd_opt in cmd_opts_list]
             print("Input command template:")
             print(cmd_opts)
+
+            if shared and pkg_name != "*":
+                cmd_opts.append("-o %s:shared=%s" % (pkg_name, shared))
 
             if profile_name and profiles_dir_path:
                 if recipe_profile_exclusion_list and (

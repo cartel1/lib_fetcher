@@ -20,6 +20,10 @@ class LibzmqConan(ConanFile):
 
         self.pkg_helper.clean_conan_cache_by_detected_os_host_and_arch(self, self.name, self.version)
 
+    def configure(self):
+        if self.settings.os == "Macos":
+            self.settings.os.version = "10.10"
+
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
@@ -48,8 +52,12 @@ class LibzmqConan(ConanFile):
         os.remove(zmq_zip_name)
 
     def build(self):
-        self.run(
-            [os.path.join(self.build_folder, "configure"), f"--prefix={self.pkg_helper.get_bin_export_path(self)}"])
+        cmd_args = [os.path.join(self.build_folder, "configure"),
+                    f"--prefix={self.pkg_helper.get_bin_export_path(self)}"]
+
+        self.pkg_helper.append_shared_build_option(self, cmd_args)
+
+        self.run([cmd_arg for cmd_arg in cmd_args])
         self.run(["make", "install"])
 
     def package(self):

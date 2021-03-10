@@ -2,6 +2,7 @@ from conans import ConanFile, tools, AutoToolsBuildEnvironment
 import os
 
 
+
 class ProtobufConan(ConanFile):
     name = "protobuf"
     version = "3.14.0"
@@ -30,8 +31,12 @@ class ProtobufConan(ConanFile):
     def build(self):
         self.run(os.path.join(self.build_folder, "autogen.sh"))
 
+        cmd_args = [f"--prefix={self.pkg_helper.get_bin_export_path(self)}"]
+
+        self.pkg_helper.append_shared_build_option(self, cmd_args)
+
         autotools = AutoToolsBuildEnvironment(self)
-        autotools.configure(args=[f"--prefix={self.pkg_helper.get_bin_export_path(self)}", "--disable-shared"])
+        autotools.configure(args=[cmd_arg for cmd_arg in cmd_args])
         autotools.install()
 
     def package(self):
