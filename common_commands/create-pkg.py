@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(description="Creates packages from NLA conan re
 parser.add_argument("recipe_name", help='The name of the recipe. Use "*" (including quotes) for all recipes.')
 parser.add_argument("profile_name", help="The name of the conan profile to use.",
                     choices=["mac_os_arm64_profile", "mac_os_x86_64_profile",
-                             "windows_x86_64_msvc_mingw_msys2_profile"])
+                             "windows_x86_64_msvc_mingw_msys2_profile", "windows_x86_64_profile"])
 parser.add_argument("-vn", "--version", help="Package version to use if package allows for alternative versions.")
 parser.add_argument("-sh", "--shared",
                     help="Defines if the binary libs of the package should be static (True) or dynamic (False). "

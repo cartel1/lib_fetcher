@@ -50,6 +50,8 @@ class NasmConan(ConanFile):
         os.remove(nasm_zip_name)
 
     def build(self):
+        self.run(os.path.join(self.build_folder, "autogen.sh"))
+        
         autotools = AutoToolsBuildEnvironment(self)
 
         autotools.configure(configure_dir=self.build_folder)

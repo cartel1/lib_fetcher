@@ -1,11 +1,22 @@
+msvc_toolchain="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.21.27702/bin/Hostx64/x64"
+toolchain="/mingw64/bin"
+cc_compiler=gcc
+
+[env]
+CONAN_CMAKE_FIND_ROOT_PATH=$toolchain
+CONAN_CMAKE_SYSROOT=$toolchain
+CC=$cc_compiler
+PATH=[$toolchain, $msvc_toolchain]
+
 [settings]
 os=Windows
-os_build=Windows
 arch=x86_64
 arch_build=x86_64
-compiler=msvc
-compiler.version=19.28
+os_build=Windows
+compiler=$cc_compiler
+compiler.version=10.2
+compiler.cppstd=11
+compiler.libcxx=libstdc++11
+
 build_type=Release
-[options]
-[build_requires]
-[env]
+

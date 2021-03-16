@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("profile_name", help="The name of the conan profile to use.",
                     choices=["mac_os_arm64_profile", "mac_os_x86_64_profile",
-                             "windows_x86_64_msvc_mingw_msys2_profile"])
+                             "windows_x86_64_msvc_mingw_msys2_profile", "windows_x86_64_profile"])
 
 args = parser.parse_args()
 
@@ -21,11 +21,11 @@ completed_process = subprocess.run(
     ["conan", "export", os.path.join(nla_recipes_dir, "nla_pkg_helper")], text=True, stderr=subprocess.STDOUT)
 completed_process.check_returncode()
 
-completed_process = subprocess.run(
-    ["conan", "create", os.path.join(nla_recipes_dir, "nasm"),
-     "nasm/2.11.06@", "--profile",
-     os.path.join(base_dir, "conan_profiles", args.profile_name)], text=True, stderr=subprocess.STDOUT)
-completed_process.check_returncode()
+#completed_process = subprocess.run(
+#    ["conan", "create", os.path.join(nla_recipes_dir, "nasm"),
+#     "nasm/2.11.06@", "--profile",
+#     os.path.join(base_dir, "conan_profiles", args.profile_name)], text=True, stderr=subprocess.STDOUT)
+#completed_process.check_returncode()
 
 completed_process = subprocess.run(
     ["conan", "create", os.path.join(nla_recipes_dir, "nasm"),

@@ -1,4 +1,5 @@
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
+import os
 
 
 class FfmpegConan(ConanFile):
@@ -34,23 +35,22 @@ class FfmpegConan(ConanFile):
 
     def _build_bin_variation(self):
         autotools = AutoToolsBuildEnvironment(self)
-
-        autotools.libs.append("nasm")
+        
+        autotools.include_paths = self.deps_cpp_info["zlib"].include_paths
+        autotools.library_paths = self.deps_cpp_info["zlib"].lib_paths + self.deps_cpp_info["zlib"].bin_paths
 
         cmd_args = [f"--prefix={self.pkg_helper.get_bin_export_path(self)}", "--enable-shared",
                     "--enable-gpl", "--disable-outdev=sdl",
                     "--enable-runtime-cpudetect", "--disable-bzlib",
-                    "--disable-libfreetype", "--disable-libopenjpeg", "--enable-zlib"]
+                    "--disable-libfreetype", "--disable-libopenjpeg"]
 
-        if tools.os_info.is_windows:
-            cmd_args = cmd_args + ["--arch=x86_64", "--target-os=win64", "--toolchain=msvc"]
-
-        elif tools.os_info.is_macos:
+        if tools.os_info.is_macos:
             if self.settings.arch == "armv8":
                 cmd_args = cmd_args + ["--arch=arm64"]
 
             elif self.settings.arch == "x86_64":
                 cmd_args = cmd_args + ["--arch=x86_64"]
 
-        autotools.configure(args=[cmd_option for cmd_option in cmd_args])
+        autotools.configure(args=cmd_args)
         autotools.install()
+

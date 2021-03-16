@@ -28,7 +28,9 @@ class OpensslConan(ConanFile):
         git.clone("https://github.com/openssl/openssl.git", "OpenSSL_1_1_1-stable")
 
     def build(self):
-        self.run("%s %s" % (os.path.join(self.build_folder, "config"), f"--prefix={self.package_folder}"))
+        self.run("%s %s %s" % (os.path.join(self.build_folder, "config"), 
+            f"--prefix={self.package_folder}", 
+            f"--openssldir={os.path.join(self.package_folder, 'ssl')}"))
         self.run("make")
         self.run("make test")
         self.run("make install")
@@ -38,4 +40,5 @@ class OpensslConan(ConanFile):
         self.cpp_info.libdirs = [os.path.join(self.package_folder, "lib")]
         self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
         self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
+        
 
