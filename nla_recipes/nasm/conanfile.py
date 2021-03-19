@@ -8,6 +8,7 @@ class NasmConan(ConanFile):
     name = "nasm"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
+    exports = "version.txt", "version.h"
     default_options = {"shared": False, "fPIC": True}
 
     def set_version(self):
@@ -48,13 +49,21 @@ class NasmConan(ConanFile):
             shutil.rmtree(os.path.join(self.source_folder, self.nasm_folder_name), ignore_errors=True)
 
         os.remove(nasm_zip_name)
+        
+    def _patch_downloaded_source_file_errors(self):
+        src_content = tools.load(os.path.join(self.recipe_folder, "version.h"))
+        
+        tools.save(os.path.join(self.build_folder, "version.h"), src_content)
 
     def build(self):
-        self.run(os.path.join(self.build_folder, "autogen.sh"))
+        #self.run(os.path.join(self.build_folder, "autogen.sh"))
         
         autotools = AutoToolsBuildEnvironment(self)
 
         autotools.configure(configure_dir=self.build_folder)
+        
+        self._patch_downloaded_source_file_errors()
+        
         autotools.install()
 
     def package_info(self):

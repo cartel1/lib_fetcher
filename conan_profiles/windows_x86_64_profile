@@ -1,12 +1,15 @@
 msvc_toolchain="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.21.27702/bin/Hostx64/x64"
-toolchain="/mingw64/bin"
+toolchain="/c/mingw64/bin"
 cc_compiler=gcc
+toolchain_host=x86_64-w64-mingw32-gcc
 
 [env]
 CONAN_CMAKE_FIND_ROOT_PATH=$toolchain
 CONAN_CMAKE_SYSROOT=$toolchain
 CC=$cc_compiler
 PATH=[$toolchain, $msvc_toolchain]
+AR=x86_64-w64-mingw32-gcc-ar
+ARCH=x86_64
 
 [settings]
 os=Windows

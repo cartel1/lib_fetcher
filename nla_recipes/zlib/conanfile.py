@@ -6,6 +6,7 @@ class ZlibConan(ConanFile):
     name = "zlib"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
+    exports = "version.txt"
     default_options = {"shared": True, "fPIC": True}
 
     def set_version(self):
