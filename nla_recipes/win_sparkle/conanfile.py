@@ -1,13 +1,13 @@
-from conans import ConanFile, tools, MSBuild
+from conans import ConanFile, tools
 from conans.errors import ConanInvalidConfiguration
+
+import os
 
 
 class WinSparkleConan(ConanFile):
     name = "win_sparkle"
     version = "0.7.0"
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
     python_requires = "nla_pkg_helper/1.0"
     python_requires_extend = "nla_pkg_helper.ConanPackageHelper"
     pkg_helper = None
@@ -20,21 +20,28 @@ class WinSparkleConan(ConanFile):
     def configure(self):
         if self.settings.os != "Windows":
             raise ConanInvalidConfiguration("This library is only needed for Windows")
-
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
+            
+    @property
+    def win_sparkle_folder_name(self):
+        return "WinSparkle-%s" % self.version
 
     def source(self):
-        git = tools.Git()
+        suffix = ".zip"
+        win_sparkle_zip_name = "%s%s" % (self.win_sparkle_folder_name, suffix)
 
-        git.clone("https://github.com/vslavik/winsparkle.git")
-        git.checkout("v0.7.0", submodule="recursive")
+        # "https://github.com/vslavik/winsparkle/releases/download/v0.7.0/WinSparkle-0.7.0.zip"
+        tools.download("https://github.com/vslavik/winsparkle/"
+            "releases/download/v%s/%s" % (self.version, win_sparkle_zip_name), win_sparkle_zip_name)
+        self.output.info("Downloading nasm: "
+                         "http://www.nasm.us/pub/nasm/releasebuilds"
+                         "/%s/%s" % (self.version, win_sparkle_zip_name))
+        tools.unzip(win_sparkle_zip_name, self.source_folder)
+
+        os.remove(win_sparkle_zip_name)
 
     def build(self):
-        msbuild = MSBuild(self)
-
-        msbuild.build("WinSparkle.sln")
+        # Remove x86 release folder to leave only x64 release folder
+        tools.rmdir(os.path.join(self.build_folder, "Release"))
 
     def package(self):
         self.pkg_helper.package_bins(self)

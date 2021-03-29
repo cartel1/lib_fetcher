@@ -1,15 +1,12 @@
-msvc_toolchain="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.21.27702/bin/Hostx64/x64"
-toolchain="/c/mingw64/bin"
-cc_compiler=gcc
-toolchain_host=x86_64-w64-mingw32-gcc
+toolchain="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.21.27702/bin/Hostx64/x64"
+cc_compiler="Visual Studio"
 
 [env]
-CONAN_CMAKE_FIND_ROOT_PATH=$toolchain
-CONAN_CMAKE_SYSROOT=$toolchain
-CC=$cc_compiler
-PATH=[$toolchain, $msvc_toolchain]
-AR=x86_64-w64-mingw32-gcc-ar
-ARCH=x86_64
+#CC=$cc_compiler
+PATH=[$toolchain]
+
+#[build_requires]
+#yasm/1.3.0
 
 [settings]
 os=Windows
@@ -17,9 +14,10 @@ arch=x86_64
 arch_build=x86_64
 os_build=Windows
 compiler=$cc_compiler
-compiler.version=10.2
-compiler.cppstd=11
-compiler.libcxx=libstdc++11
+compiler.cppstd=14
+#compiler.runtime=dynamic
 
+# Adjust to the MSVC version
+compiler.version=16
 build_type=Release
 

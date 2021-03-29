@@ -18,6 +18,7 @@ class OpensslConan(ConanFile):
     def build_requirements(self):
         if tools.os_info.is_windows and not tools.which("perl"):
             self.build_requires("strawberryperl/5.30.0.1")
+            self.build_requires("nasm/2.15.05")
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -28,17 +29,26 @@ class OpensslConan(ConanFile):
         git.clone("https://github.com/openssl/openssl.git", "OpenSSL_1_1_1-stable")
 
     def build(self):
-        self.run("%s %s %s" % (os.path.join(self.build_folder, "config"), 
-            f"--prefix={self.package_folder}", 
-            f"--openssldir={os.path.join(self.package_folder, 'ssl')}"))
-        self.run("make")
-        self.run("make test")
-        self.run("make install")
+        if self.settings.os == "Macos":
+            self.run("%s %s %s" % (os.path.join(self.build_folder, "config"), 
+                f"--prefix={self.package_folder}", 
+                f"--openssldir={os.path.join(self.package_folder, 'ssl')}"))
+            self.run("make")
+            self.run("make test")
+            self.run("make install")
+        elif self.settings.os == "Windows":
+            self.run("%s %s %s %s %s" % ("perl", os.path.join(self.build_folder, "Configure"), 
+                f"--prefix={self.package_folder}", 
+                f"--openssldir={os.path.join(self.package_folder, 'ssl')}", "VC-WIN64I"))
+            self.run(["nmake"])
+            #self.run(["nmake", "test"])
+            self.run(["nmake", "install"])
 
     def package_info(self):
         self.cpp_info.includedirs = [os.path.join(self.package_folder, "include")]
         self.cpp_info.libdirs = [os.path.join(self.package_folder, "lib")]
         self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
         self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
+        self.user_info.openssldir = os.path.join(self.package_folder, 'ssl')
         
 
