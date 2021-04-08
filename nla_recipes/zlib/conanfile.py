@@ -19,7 +19,8 @@ class ZlibConan(ConanFile):
 
     def source(self):
         git = tools.Git()
-        git.clone("https://github.com/madler/zlib.git", f"v{self.version}")
+      
+        git.clone("https://github.com/madler/zlib.git", "master")
 
     def build(self):
         cmake = CMake(self)
