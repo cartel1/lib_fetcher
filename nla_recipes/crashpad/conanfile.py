@@ -20,7 +20,7 @@ class CrashpadConan(ConanFile):
 
     def init(self):
         self.pkg_helper = self.python_requires["nla_pkg_helper"].module.ConanPackageHelper
-        
+
         self.pkg_helper.clean_conan_cache_by_detected_os_host_and_arch(self, self.name, self.version)
 
     def build_requirements(self):
@@ -31,54 +31,58 @@ class CrashpadConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    def source(self):   
+    def source(self):
         if tools.os_info.is_windows:
-            
+
             tools.mkdir(self.depot_tools_dep)
-            
+
             with tools.chdir(self.depot_tools_dep):
                 git = tools.Git()
                 git.clone("https://chromium.googlesource.com/chromium/tools/depot_tools.git")
-            
+
                 with tools.environment_append({"PATH": [os.path.join(self.source_folder, self.depot_tools_dep)]}):
                     tools.mkdir(self.name)
-                    
+
                     with tools.chdir(self.name):
                         self.run(f"fetch {self.name}")
-                        
+
         elif tools.os_info.is_macos:
             self.run(f"fetch {self.name}", run_environment=True)
 
     def build(self):
         arch_map = {self.pkg_helper.ArchVariations.WIN10_X86_64_VARIATION.value: "x64",
-                                    self.pkg_helper.ArchVariations.MACOSX_ARM64_VARIATION.value: "arm64",
-                                    self.pkg_helper.ArchVariations.MACOSX_X86_64_VARIATION.value: "x64"}
-                                    
-        if tools.os_info.is_windows:        
+                    self.pkg_helper.ArchVariations.MACOSX_ARM64_VARIATION.value: "arm64",
+                    self.pkg_helper.ArchVariations.MACOSX_X86_64_VARIATION.value: "x64"}
+
+        if tools.os_info.is_windows:
             with tools.chdir(os.path.join(self.build_folder, self.depot_tools_dep, self.name)):
                 with tools.chdir(os.path.join(self.build_folder, self.depot_tools_dep, self.name, self.name)):
                     with tools.environment_append({"PATH": [os.path.join(self.build_folder, self.depot_tools_dep)]}):
-                        output_dir = os.path.join(self.build_folder, self.depot_tools_dep, self.name, self.name, self.out_dir, self.release_dir)
-                        
+                        output_dir = os.path.join(self.build_folder, self.depot_tools_dep, self.name, self.name,
+                                                  self.out_dir, self.release_dir)
+
                         self.run(f"gn gen {output_dir}")
                         self.run(f"ninja -C {output_dir}")
                         tools.save(os.path.join(output_dir, "args.gn"),
                                    'target_cpu=\"%s\"' % arch_map[self.pkg_helper.get_bin_variation(self)], append=True)
                         self.run(f"ninja -C {output_dir}")
-                
+
         elif tools.os_info.is_macos:
             with tools.chdir(self.name):
-                output_dir = os.path.join(self.out_dir, self.release_dir)
+                with tools.environment_append({"PATH": [self.deps_env_info["depot_tools"].DEPOT_TOOLS_PATH[0]]}):
+                    output_dir = os.path.join(self.out_dir, self.release_dir)
 
-                self.run(f"gn gen {output_dir}")
-                self.run(f"ninja -C {output_dir}")
-                tools.save(os.path.join(self.build_folder, self.name, output_dir, "args.gn"),
-                           'target_cpu=\"%s\"' % arch_map[self.pkg_helper.get_bin_variation(self)], append=True)
-                self.run(f"ninja -C {output_dir}")
+                    self.run(f"gn gen {output_dir}")
+                    self.run(f"ninja -C {output_dir}")
+                    tools.save(os.path.join(self.build_folder, self.name, output_dir, "args.gn"),
+                               'target_cpu=\"%s\"' % arch_map[self.pkg_helper.get_bin_variation(self)], append=True)
+                    self.run(f"ninja -C {output_dir}")
 
     def package(self):
-        src_bins = os.path.join(self.build_folder, self.depot_tools_dep, self.name, self.name, self.out_dir, 
-            self.release_dir) if tools.os_info.is_windows else os.path.join(self.build_folder, self.name, self.out_dir, self.release_dir)
+        src_bins = os.path.join(self.build_folder, self.depot_tools_dep, self.name, self.name, self.out_dir,
+                                self.release_dir) if tools.os_info.is_windows else os.path.join(self.build_folder,
+                                                                                                self.name, self.out_dir,
+                                                                                                self.release_dir)
 
         self.pkg_helper.package_all_bins_to_bin_variation_dir(self, bin_src=src_bins)
 
