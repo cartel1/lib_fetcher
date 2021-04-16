@@ -30,15 +30,15 @@ class ProtobufConan(ConanFile):
 
     def build(self):
         if self.settings.os == "Macos":
-            self.run(os.path.join(self.build_folder, "autogen.sh"))
+            with tools.chdir("cmake"):
+                cmd_args = [f"-DCMAKE_INSTALL_PREFIX={self.pkg_helper.get_bin_export_path(self)}"]
 
-            cmd_args = [f"--prefix={self.pkg_helper.get_bin_export_path(self)}"]
+                self.pkg_helper.append_shared_build_option(self, cmd_args)
 
-            self.pkg_helper.append_shared_build_option(self, cmd_args)
-
-            autotools = AutoToolsBuildEnvironment(self)
-            autotools.configure(args=cmd_args)
-            autotools.install
+                cmake = CMake(self)
+                cmake.configure(args=cmd_args, source_folder=os.path.join(self.build_folder, "cmake"))
+                cmake.build()
+                cmake.install()
             
         elif self.settings.os == "Windows":
             cmake = CMake(self)
