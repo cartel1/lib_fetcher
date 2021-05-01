@@ -78,7 +78,8 @@ class LibzmqConan(ConanFile):
     def build(self):
         if tools.os_info.is_macos:
             if not self.options.shared:
-                with tools.environment_append({"CFLAGS": "-mmacosx-version-min=10.10"}):
+                with tools.environment_append({"CFLAGS": "-mmacosx-version-min=10.10",
+                                               "CXXFLAGS": "-mmacosx-version-min=10.10"}):
                     self._do_the_build()
             else:
                 self._do_the_build()
