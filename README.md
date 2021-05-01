@@ -21,11 +21,25 @@ the build process on Windows and MacOS computers.
 
 ### Software Requirements
 
+- **Microsoft Visual Studio 2019**
+
+    Download and install Microsoft Visual Studio and the Microsoft C/C++ tools based on instruction found 
+  [here](https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation).  You install the community edition
+  and the primary workload configuration selection should be "Desktop development with C++" workload.
+  
+  
+- **MSYS2**
+
+  Download and install MSYS2 based on instructions found [here](https://www.msys2.org)
+
+
 - **Python 3**
 
   Download the latest Python 3 installer for Windows 10 and install it.  A Python 3 installer for 
   Windows 10 x64 can be sourced [here](https://www.python.org/ftp/python/3.9.4/python-3.9.4-amd64.exe).  
   Make sure to select the option to also install PIP 3 on the installation dialog window.
+  
+  Use the pacman package manager tool to install the latest version of Python 3 for MSYS2 via  
   
 
 - **PIP 3**

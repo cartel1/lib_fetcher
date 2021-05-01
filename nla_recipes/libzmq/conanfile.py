@@ -21,11 +21,6 @@ class LibzmqConan(ConanFile):
 
         self.pkg_helper.clean_conan_cache_by_detected_os_host_and_arch(self, self.name, self.version)
         
-    def configure(self):
-        if self.settings.os == "Macos" and not self.options.shared:
-            self.settings.os.version = "10.10"
-            
-
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
@@ -63,22 +58,32 @@ class LibzmqConan(ConanFile):
             
             tools.save(dest_make_file, temp_make_content)
 
-    def build(self):
+    def _do_the_build(self):
         mac_src_folder = self.build_folder
         win_src_folder = os.path.join(self.build_folder)
         src_folder = win_src_folder if tools.os_info.is_windows else mac_src_folder
-        
+
         cmd_args = [os.path.join(src_folder, "configure"),
                     f"--prefix={self.pkg_helper.get_bin_export_path(self)}"]
 
         self.pkg_helper.append_shared_build_option(self, cmd_args)
-        
+
         self.run(cmd_args)
-        
+
         if tools.os_info.is_windows:
             self._skip_details_of_failing_tests(src_folder)
-        
+
         self.run(["make", "install"])
+
+    def build(self):
+        if tools.os_info.is_macos:
+            if not self.options.shared:
+                with tools.environment_append({"CFLAGS": "-mmacosx-version-min=10.10"}):
+                    self._do_the_build()
+            else:
+                self._do_the_build()
+        elif tools.os_info.is_windows:
+            self._do_the_build()
 
     def package(self):
         self.pkg_helper.build_macosx_universal_bins(self)
