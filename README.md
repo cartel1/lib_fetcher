@@ -17,7 +17,7 @@ The following sections will outline the lib_fetcher setup and execution requirem
 access the source code of C and C++ libraries and applications located in remote repositories and to execute
 the build process on Windows and MacOS computers.
 
-## Setup and Build Execution Requirements for Windows 10 x64 Computers
+## Setup and Build Execution Instructions for Windows 10 x64 Computers
 
 ### Software Requirements
 
@@ -55,6 +55,17 @@ the build process on Windows and MacOS computers.
 
   > pip3 install conan
   
+  After Conan has been installed, locate the following file in your user home directory and open it in a text editor:
+
+  > .conan/settings.yml
+  
+  Once the settings.yml file is open, do the following:
+
+  1. Navigate to the following section - ***compiler: gcc: version:***
+  
+  2. At the end of the list of versions, type: "10.2" after a comma.
+  
+  3. Save the settings.yml file and exit.
 
 - **MSYS2**
 
@@ -139,7 +150,7 @@ command-line scripts and options:
     
     Use windows_x86_64_msvc_mingw_msys2_profile to build libs in the msys2 terminal.
       
-## Setup and Build Execution Requirements for MacOS 10+ x86_64 and arm64 Computers
+## Setup and Build Execution Instructions for MacOS 10+ x86_64 and arm64 Computers
 
 ### Software Requirements
 
@@ -176,16 +187,33 @@ command-line scripts and options:
   
 - **Conan**
 
-    Install the Conan build module by running the following command at a terminal prompt window:
+    Install the Conan build module by running the following command at a terminal prompt window: 
 
   > pip3 install conan
   
+  After Conan has been installed, locate the following file in your user home directory and open it in a text editor:
 
-- **Unix Autotools (Automake, Autoconf, Libtool)**
+  > .conan/settings.yml
+  
+   Once the settings.yml file is open, do the following:
 
-  Install automake, autoconf, and libtool with your preferred package manager, e.g. homebrew (recommended). E.g:
+  1. Navigate to path - arch:
+  
+  2. In the list of archs, insert value "arm64" at the end of all the arm* subset of values. The arm64 value should be 
+     inserted in the list without quotes just like the other values.
+     
+  3. Navigate to the following section - ***compiler: gcc: version:***
+  
+  4. At the end of the list of versions, type: "10.2" after a comma.
+  
+  5. Save the settings.yml file and exit.  
+  
 
-  > brew install autoconf automake libtool
+- **Unix Autotools (Automake, Autoconf, Libtool) and CMake**
+
+  Install automake, autoconf, libtool and cmake with your preferred package manager, e.g. homebrew (recommended). E.g:
+
+  > brew install autoconf automake libtool cmake
   
 
 ### Build Instructions
@@ -216,6 +244,226 @@ running various lib_fecther command-line scripts and options:
     
     ***Please note that some builds for recipes will fail. These failed recipe builds must be identified and are usually
     associated with recipes that can only be built on Windows OS machines.***
+    
+## Setup Instructions for a Conan Package Manager Repository (Optional) 
+A Conan package manager repository is used to centrally store the build artefacts of the fetched source code of libraries and
+executables. Such build artefacts include static and shared libs, binary executables, header files and Conan recipes and
+packages.
+
+A Conan package manager repository will provide proper segregated storage for packages generated from Conan recipes
+that are associated with multiple OS platforms and architectures.
+
+Follow the instructions [here](https://docs.conan.io/en/latest/uploading_packages/running_your_server.html?highlight=gunicorn#server-configuration) which outlines the steps needed to setup a Conan package manager repository
+and server such as Gunicorn (recommended).
+
+### Setup Package Manager Repository Remotes and Authentication
+
+After a Conan package manager repository and server has been established and configured with the necessary allowed user
+credential as explained [here](https://docs.conan.io/en/latest/uploading_packages/running_your_server.html?highlight=gunicorn#server-configuration),
+you will need to configure your build machine to be able to access the repository manager and provide the necessary credentials
+to be able to push or download generated packages.
 
 
+Open a command-line terminal window and run the following command to setup a reference to the package manager repository: 
+
+> conan remote add <arbitrary_name_of_remote> http://<ip_address_of_repository_manager>:<port> --insert=0
  
+where: 
+
+< arbitrary_name_of_remote > - is a name you provide for the Conan remote reference you'd like to create (without spaces)
+
+< ip_address_of_repository_manager > - is the ip address or host name of the computer running the package manager repository
+and server.
+
+
+< port > - is the port number configured and exposed by the configuration of the package manager repository and server.
+
+Example:
+
+> conan remote add nla-conan-repo http://162.174.15.1:9300 --insert=0
+
+
+Once you have an account/access credentials configured on the repository manager server, run the following command to add 
+your account credentials to the Conan client:
+
+> conan user < your-user-account > -r < name_of_remote > -p < your user account password >
+
+where:
+
+< your-user-account > - is the user account configured on the repository manager server.
+
+< name_of_remote > - is the name of the previosuly created Conan remote reference to the URL of the repository manager.
+
+< your user account password > - is the user account password configured on the repository manager server
+
+Example:
+
+> conan user user1 -r nla-conan-repo -p user1-password
+
+At this point, you should  now be able to upload and download packages to and from the repository manager.
+
+## Command-line Scripts User Guide
+
+The following sections will describe the command-line scripts needed manage the life cycle of the builds.
+
+***Important! Before running any command-line script, open a command terminal window and cd to the common_commands 
+subdirectory in the lib_fetcher directory. All command-line scripts must be run from the common_commands subdirectory.***
+
+### System Initialization
+If you plan on building multiple recipes at once by running the commanad ```python3 create-pkg.py "*"```, you must 
+first do an initialisation step by running the following command in a command-line terminal window:
+
+For Mac OS:
+
+> python3 init-sys.py < mac_os_arm64_profile or mac_os_x86_64_profile > 
+
+For Windows 10:
+
+> python3 init-sys.py < windows_x86_64_profile or windows_x86_64_msvc_mingw_msys2_profile >  
+
+### Building Binary Libraries and Executables from Conan Recipes
+After running init-sys.py, you can now run the following commands to run all recipe builds for a specific recipe build.
+
+***Important! All recipes are listed in the nla-recipes folder. A recipe name is the folder name of the recipe.***
+
+For Mac OS:
+
+> python3 create-pkg.py "*" < mac_os_arm64_profile or mac_os_x86_64_profile >
+
+> python3 create-pkg.py < recipe_name > < mac_os_arm64_profile or mac_os_x86_64_profile > 
+
+Example:
+
+> python3 create-pkg.py "*" mac_os_x86_64_profile
+
+> python3 create-pkg.py ffmpeg mac_os_arm64_profile
+
+For Windows:
+
+> python3 create-pkg.py "*" < windows_x86_64_profile or windows_x86_64_msvc_mingw_msys2_profile > 
+
+> python3 create-pkg.py < recipe_name > < windows_x86_64_profile or windows_x86_64_msvc_mingw_msys2_profile > 
+
+Example:
+
+> python3 create-pkg.py "*" windows_x86_64_msvc_mingw_msys2_profile
+
+> python3 create-pkg.py ffmpeg windows_x86_64_msvc_mingw_msys2_profile
+
+### Removing Conan Packages
+All created packages are stored in the following location:
+
+> < user_home_directory >/.conan/data
+
+where:
+
+< user_home_directory > - is the home directory of the user running the lib_fetcher scripts.
+
+Example:
+
+> ~/.conan/data
+
+All subdirectories located in the ***~/.conan/data*** directory are the packages that were built from their respective
+recipes.  You can delete specific package subdirectories or all subdirectories as required using standard operating 
+system terminal commands or via normal highlighting and deleting of all or specific directories using the OS specific file
+explorer application.
+
+Example:
+
+> rm -rf ffmpeg
+
+
+### Uploading Packages
+After creating the packages on your build machine using the create-pkg.py script, you can then push/upload them to the 
+package manager server repo by running the following script to upload all packages or a specific package:
+
+> python3 upload-pkg.py "*" < name_of_package_repo_remote >
+
+or
+
+> python3 upload-pkg.py < recipe_name > < name_of_package_repo_remote >
+
+Example:
+
+> python3 upload-pkg.py "*" nla-conan-repo
+
+or
+
+> python3 upload-pkg.py ffmpeg nla-conan-repo
+
+### Downloading Packages
+
+To download all packages or a specific package from the package manager repository, run the following scripts:
+
+>  python3 download-pkg.py "*" < name_of_package_repo_remote >
+
+or 
+
+> python3 download-pkg.py < recipe_name > < name_of_package_repo_remote >
+
+Example:
+
+> python3 download-pkg.py "*" nla-conan-repo
+
+or
+
+> python3 download-pkg.py ffmpeg nla-conan-repo
+
+## Locating Built Artefacts for Windows and MacOS Builds
+
+After running the create-pkg.py script to create packages from recipes as described in previous sections, you can locate
+generated binaries for static and dynamic libraries, executables and header files in the respective OS specific package 
+deployment subdirectory of the .conan directory which is located in the user's home directory.
+
+
+On MacOS x86_64 machines, the package deployment subdirectory is located in the following path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/macosx_x86_64
+
+
+On MacOS arm64 machines, the package deployment subdirectory is located in the following path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/macosx_arm64
+
+
+On MacOS x86_64 machines, the package deployment subdirectory for generated universal binaries is located in the following 
+path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/macosx_x86_64/macosx_universal
+
+
+On MacOS arm64 machines, the package deployment subdirectory for generated universal binaries is located in the following 
+path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/macosx_arm64/macosx_universal
+
+
+On Windows x86_64 machines, the package deployment subdirectory is located in the following path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/win10_x86_64
+
+Example:
+
+> ~/.conan/data/poco/1.10.1/_/_/package/259c493fd8eb79c7bfe0d64db3c2b75acfbf8064/macosx_x86_64
+
+## A Note on MacOS Universal Binaries
+If the local .conan/data package cache directory of the current build machine contains packages for recipes associated with 
+binaries that were built on a machine with an architecture that is different from the current build machine, universal binaries will be automatically created whenever the create-pkg.py script is run
+for recipes with the same name on the current build machine will be automatically generated whenever the
+create-pkg.py script is executed.
+
+On MacOS x86_64 build machines, the package deployment subdirectory for generated universal binaries is located in the following 
+path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/macosx_x86_64/macosx_universal
+
+
+On MacOS arm64 build machines, the package deployment subdirectory for generated universal binaries is located in the following 
+path structure:
+
+> <user_home_directory>/.conan/data/<recipe_package_name>/<recipe_package_version>/_/_/package/<recipe_package_id>>/macosx_arm64/macosx_universal
+
+
+Example:
+
+> ~/.conan/data/poco/1.10.1/_/_/package/259c493fd8eb79c7bfe0d64db3c2b75acfbf8064/macosx_x86_64/macosx_universal
