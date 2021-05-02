@@ -469,7 +469,7 @@ Example:
 > ~/.conan/data/poco/1.10.1/_/_/package/259c493fd8eb79c7bfe0d64db3c2b75acfbf8064/macosx_x86_64/macosx_universal
 
 
-##A Note on Building Shared vs Static Libraries with the create-pkg.py Script
+## A Note on Building Shared vs Static Libraries with the create-pkg.py Script
 
 When building specific recipes with the create-pkg.py script, you can optionally specify the --shared or -sh flag which takes a value of True or False
 which will cause the create-pkg.py script to try and create Conan packages with shared library artefacts, or static library artefacts respectively.
