@@ -467,3 +467,26 @@ path structure:
 Example:
 
 > ~/.conan/data/poco/1.10.1/_/_/package/259c493fd8eb79c7bfe0d64db3c2b75acfbf8064/macosx_x86_64/macosx_universal
+
+
+##A Note on Building Shared vs Static Libraries with the create-pkg.py Script
+
+When building specific recipes with the create-pkg.py script, you can optionally specify the --shared or -sh flag which takes a value of True or False
+which will cause the create-pkg.py script to try and create Conan packages with shared library artefacts, or static library artefacts respectively.
+
+Please note that the optional shared flag is not guaranteed work for all recipes as the source code and build configuration files for third party
+libraries and applications downloaded by lib_fetcher may have default internal build settings which cannot be altered.
+
+An Example use of the shared flag is shown below:
+
+> python3 create-pkg.py poco mac_os_x86_64_profile --shared=True
+
+
+## A Note on Getting Help When Using a lib_fetcher Command-line Script
+
+If you want to run a lib_fetcher script, and you forget the details about the required command line arguments and flags, you can simply specify
+the name of the script along with the --help or -h flag, and the help details for the command-line script will be displayed onscreen.
+
+Example:
+
+> python3 create-pkg.py --help
