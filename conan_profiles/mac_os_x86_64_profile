@@ -1,21 +1,21 @@
 cc_compiler=gcc
+cxx_compiler=g++
 
 [env]
 CC=$cc_compiler
-CXXFLAGS=-mmacosx-version-min=10.12
-CFLAGS=-mmacosx-version-min=10.12
+CXXFLAGS=-mmacosx-version-min=10.13
+CFLAGS=-mmacosx-version-min=10.13
 
 #[build_requires]
 #yasm/1.3.0
 
 [settings]
 os=Macos
-os.version=10.12
+os.version=10.13
 arch=x86_64
 arch_build=x86_64
 os_build=Macos
-compiler=$cc_compiler
-compiler.version=10.2
-compiler.libcxx=libstdc++11
-compiler.cppstd=11
+compiler=apple-clang
+compiler.version=10.0
+compiler.libcxx=libc++
 build_type=Release
